@@ -1,0 +1,33 @@
+
+--- a/app.py
++++ b/app.py
+@@
+ from utils.metrics import TrackCSVWriter
++from motion.anchor_manager import AnchorManager
+@@
+-    prev = None
+-    t0 = time.time()
++    prev = None
++    t0 = time.time()
++    anchor_mgr = AnchorManager(max_time_lost=30, dist_thresh=60.0, app_thresh=0.5, use_appearance=True)
+@@
+-        H = cmc.estimate(prev, frame) if prev is not None else None
+-        tracker.set_cmc(H)
+-        dets = detector.detect(frame)
+-        tracks = tracker.update(dets, frame)
+-        anno = tracker.draw(frame.copy(), tracks)
+-        vw.write(anno)
+-        csvw.write(i, tracks)
+-        prev = frame
++        H = cmc.estimate(prev, frame) if prev is not None else None
++        tracker.set_cmc(H)
++        anchor_mgr.predict(H)
++
++        dets = detector.detect(frame)
++        tracks = tracker.update(dets, frame)
++        tracks = anchor_mgr.remap_and_update(tracks, frame, i)
++
++        anno = tracker.draw(frame.copy(), tracks)
++        vw.write(anno)
++        csvw.write(i, tracks)
++        prev = frame

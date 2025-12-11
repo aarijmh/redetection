@@ -3,6 +3,7 @@ import argparse, time
 from core.registry import build_detector, build_tracker, build_cmc, build_reid
 from core.video_io import VideoReader, VideoWriter
 from utils.metrics import TrackCSVWriter
+from motion.anchor_manager import AnchorManager
 
 
 import sys, os
@@ -40,14 +41,17 @@ def main():
     vr = VideoReader(args.video)
     vw = VideoWriter(args.output, vr.fps, vr.width, vr.height)
     csvw = TrackCSVWriter(args.save_csv)
+    anchor_mgr = AnchorManager(max_time_lost=30, dist_thresh=60.0, app_thresh=0.5, use_appearance=True)
 
     prev = None
     t0 = time.time()
     for i, frame in enumerate(vr):
         H = cmc.estimate(prev, frame) if prev is not None else None
+        anchor_mgr.predict(H)
         tracker.set_cmc(H)
         dets = detector.detect(frame)
         tracks = tracker.update(dets, frame)
+        tracks = anchor_mgr.remap_and_update(tracks, frame, i)
         anno = tracker.draw(frame.copy(), tracks)
         vw.write(anno)
         csvw.write(i, tracks)
