@@ -9,15 +9,15 @@ from motion.cmc import HomographyCMC, NoCMC
 from motion.cmc_superglue import SuperPointSuperGlueCMC
 
 
-def build_detector(name='yolov8', weights='yolov8x.pt', conf=0.25, iou=0.5, class_filter=None):
+def build_detector(name='yolov8', weights='yolov8x.pt', conf=0.25, iou=0.5, class_filter=None, device='cpu'):
     if name == 'yolov8':
         try:
-            return YOLOv8Detector(weights, conf, iou, class_filter)
+            return YOLOv8Detector(weights, conf, iou, class_filter, device)
         except Exception as e:
             print('[WARN] YOLOv8 unavailable:', e); return DummyDetector()
     if name == 'rtdetr':
         try:
-            return RTDETRDetector(weights, conf, iou, class_filter)
+            return RTDETRDetector(weights, conf, iou, class_filter, device)
         except Exception as e:
             print('[WARN] RT-DETR unavailable:', e); return DummyDetector()
     return DummyDetector()
@@ -38,10 +38,10 @@ def build_tracker(name='strongsort', reid=None, match_iou=0.5):
             print('[WARN] BoxMOT unavailable:', e); return SimpleSORTTracker(match_iou)
     return SimpleSORTTracker(match_iou)
 
-def build_cmc(name='none'):
+def build_cmc(name='none', device='cpu'):
     if name == 'superglue':
         return SuperPointSuperGlueCMC(weights_dir='SuperGluePretrainedNetwork/models/weights',
-                                      model='outdoor', device='cuda')
+                                      model='outdoor', device=device)
     elif name == 'homography':
         return HomographyCMC()
     else:

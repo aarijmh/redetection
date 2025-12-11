@@ -1,13 +1,15 @@
 from .base import BaseDetector, Detection
 
 class RTDETRDetector(BaseDetector):
-    def __init__(self, weights='rtdetr-l.pt', conf=0.25, iou=0.5, class_filter=None):
+    def __init__(self, weights='rtdetr-l.pt', conf=0.25, iou=0.5, class_filter=None, device='cpu'):
         from ultralytics import RTDETR
         self.model = RTDETR(weights)
+        self.model.to(device)
+        self.device = device
         self.conf, self.iou, self.class_filter = conf, iou, class_filter
     
     def detect(self, frame):
-        res = self.model.predict(source=frame, conf=self.conf, iou=self.iou, verbose=False)[0]
+        res = self.model.predict(source=frame, conf=self.conf, iou=self.iou, verbose=False, device=self.device)[0]
         dets = []
         names = res.names
         boxes = res.boxes
