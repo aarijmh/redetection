@@ -24,10 +24,7 @@ This guide explains how to configure your **modular detection + tracking** pipel
 Your scaffold supports a `--class-filter` flag. Recommended **accuracy-first** command (YOLOv8x + BoT‑SORT + CMC):
 
 ```bash
-python app.py --video input.mp4 --output out.mp4 \
-  --detector yolov8 --detector-weights yolov8x.pt \
-  --tracker botsort --use-cmc --save-csv office.csv \
-  --class-filter chair laptop tv "dining table"
+python app.py --video outout.mp4 --output out.mp4 --detector yolov8 --detector-weights yolov8x.pt --tracker botsort --use-cmc --save-csv office.csv --class-filter chair
 ```
 
 - **YOLOv8x** is a strong COCO detector with robust AP. citeturn11search174  

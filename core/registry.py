@@ -1,4 +1,3 @@
-
 from models.detectors.base import DummyDetector
 from models.detectors.yolov8 import YOLOv8Detector
 from models.detectors.rtdetr import RTDETRDetector
@@ -6,9 +5,6 @@ from models.trackers.boxmot_wrappers import BoxMOTTracker
 from models.trackers.simple_sort import SimpleSORTTracker
 from models.reid.base import DummyReID
 from models.reid.osnet_boxmot import OSNetBoxMOT
-from motion.cmc import HomographyCMC, NoCMC
-
-# core/registry.py
 from motion.cmc import HomographyCMC, NoCMC
 from motion.cmc_superglue import SuperPointSuperGlueCMC
 
