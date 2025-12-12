@@ -2,7 +2,7 @@
 from .base import BaseTracker, Track
 import numpy as np
 class BoxMOTTracker(BaseTracker):
-    def __init__(self, tracker_type='strongsort', reid=None, match_iou=0.5):
+    def __init__(self, tracker_type='strongsort', reid=None, match_iou=0.5, track_buffer=30):
         import torch
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         
@@ -10,16 +10,19 @@ class BoxMOTTracker(BaseTracker):
             from boxmot import StrongSort as Impl
             self.impl = Impl(reid_weights=reid.weights if reid else None, 
                            device=device,
-                           half=True)
+                           half=True,
+                           track_buffer=track_buffer)
         elif tracker_type == 'botsort':
             from boxmot import BotSort as Impl
             self.impl = Impl(reid_weights=reid.weights if reid else None,
                            device=device,
-                           half=True)  # half precision
+                           half=True,  # half precision
+                           track_buffer=track_buffer)
         elif tracker_type == 'deocsort':
             from boxmot import DeepOcSort as Impl
             self.impl = Impl(model_weights=reid.weights if reid else None,
-                           device=device)
+                           device=device,
+                           track_buffer=track_buffer)
         else:
             raise ValueError('unknown tracker')
         self.H=None

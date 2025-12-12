@@ -30,10 +30,10 @@ def build_reid(name='osnet'):
             print('[WARN] OSNet unavailable:', e); return DummyReID()
     return DummyReID()
 
-def build_tracker(name='strongsort', reid=None, match_iou=0.5):
+def build_tracker(name='strongsort', reid=None, match_iou=0.5, track_buffer=30):
     if name in ['strongsort','botsort','deocsort']:
         try:
-            return BoxMOTTracker(name, reid=reid, match_iou=match_iou)
+            return BoxMOTTracker(name, reid=reid, match_iou=match_iou, track_buffer=track_buffer)
         except Exception as e:
             print('[WARN] BoxMOT unavailable:', e); return SimpleSORTTracker(match_iou)
     return SimpleSORTTracker(match_iou)

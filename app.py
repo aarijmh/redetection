@@ -47,10 +47,18 @@ def print_summary(stats, processing_time, total_frames):
     print(f"- Unique tracks: {stats['unique_tracks']}")
     print(f"- Average detections per frame: {stats['total_detections']/total_frames:.2f}")
     
+    # Simple COCO class name mapping
+    class_names = {
+        0: 'person', 56: 'chair', 62: 'tv/monitor', 63: 'laptop', 64: 'book', 67: 'cell phone',
+        73: 'laptop', 74: 'keyboard', 76: 'mouse', 45: 'bowl'
+    }
+    
     if stats['class_counts']:
         print("\nClass distribution:")
         for cls, count in sorted(stats['class_counts'].items(), key=lambda x: x[1], reverse=True):
-            print(f"- {cls}: {count} detections")
+            unique_count = len(stats['class_unique_tracks'][cls])
+            class_name = class_names.get(int(cls), f"class_{cls}")
+            print(f"- {class_name} ({cls}): {count} detections, {unique_count} unique tracks")
     
     print("="*50 + "\n")
 
@@ -70,19 +78,20 @@ def main():
     
     detector = build_detector(args.detector, args.detector_weights, args.conf, args.iou, args.class_filter, device=device)
     reid = build_reid(args.reid)
-    tracker = build_tracker(args.tracker, reid=reid, match_iou=args.iou)
+    tracker = build_tracker(args.tracker, reid=reid, match_iou=args.iou, track_buffer=90)  # Slightly reduced buffer
     cmc = build_cmc(name=args.cmc, device=device)
 
     vr = VideoReader(args.video)
     vw = VideoWriter(args.output, vr.fps, vr.width, vr.height)
     csvw = TrackCSVWriter(args.save_csv)
-    anchor_mgr = AnchorManager(max_time_lost=120, dist_thresh=200.0, app_thresh=0.95, use_appearance=False)
+    anchor_mgr = AnchorManager(max_time_lost=240, dist_thresh=30.0, app_thresh=0.5, use_appearance=True)  # More conservative settings
 
     # Initialize statistics
     stats = {
         'total_detections': 0,
         'unique_tracks': set(),
         'class_counts': defaultdict(int),
+        'class_unique_tracks': defaultdict(set),  # Track unique track IDs per class
         'frame_times': []
     }
 
@@ -107,7 +116,7 @@ def main():
         tracker.set_cmc(H)
         dets = detector.detect(frame)
         tracks = tracker.update(dets, frame)
-        tracks = anchor_mgr.remap_and_update(tracks, frame, i)
+        # tracks = anchor_mgr.remap_and_update(tracks, frame, i)  # Disabled to reduce fragmentation
         
         # Update statistics
         stats['total_detections'] += len(tracks)
@@ -115,6 +124,7 @@ def main():
             stats['unique_tracks'].add(track.id)  # Changed from track.track_id to track.id
             if hasattr(track, 'cls'):
                 stats['class_counts'][track.cls] += 1
+                stats['class_unique_tracks'][track.cls].add(track.id)
         
         anno = tracker.draw(frame.copy(), tracks)
         vw.write(anno)
