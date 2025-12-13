@@ -78,10 +78,13 @@ def main():
     
     detector = build_detector(args.detector, args.detector_weights, args.conf, args.iou, args.class_filter, device=device)
     reid = build_reid(args.reid)
-    tracker = build_tracker(args.tracker, reid=reid, match_iou=args.iou, track_buffer=90)  # Slightly reduced buffer
+    tracker = build_tracker(args.tracker, reid=reid, match_iou=0.2, track_buffer=15)  # More conservative for better separation
     cmc = build_cmc(name=args.cmc, device=device)
 
     vr = VideoReader(args.video)
+    print(f"VideoReader initialized: {vr.width}x{vr.height} at {vr.fps} FPS")
+    if hasattr(vr, 'rotation_angle') and vr.rotation_angle != 0:
+        print(f"Detected video rotation: {vr.rotation_angle} degrees")
     vw = VideoWriter(args.output, vr.fps, vr.width, vr.height)
     csvw = TrackCSVWriter(args.save_csv)
     anchor_mgr = AnchorManager(max_time_lost=240, dist_thresh=30.0, app_thresh=0.5, use_appearance=True)  # More conservative settings
